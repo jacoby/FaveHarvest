@@ -1,4 +1,4 @@
--- DROP TABLE IF EXISTS twitter_favorites  ;
+DROP TABLE IF EXISTS twitter_favorites  ;
 CREATE TABLE twitter_favorites (
     id                  int( 64 ) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY ,
     consumer            varchar( 128 ) NOT NULL COMMENT "screen name of user" ,

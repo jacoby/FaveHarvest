@@ -78,7 +78,7 @@ use Exporter qw(import) ;
 use MyDB ;
 
 our $VERSION  = 0.0.3 ;
-our $Database = 'itap' ;
+our $Database = 'default' ;
 
 my %prepared ;
 my $dbh ;
