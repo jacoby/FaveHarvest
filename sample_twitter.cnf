@@ -1,0 +1,7 @@
+---
+consumer_key: get_your_own_key
+consumer_secret: get_your_own_secret
+tokens:
+  jacobydave:
+    access_token: get_this_yourself_too
+    access_token_secret: and_also_this

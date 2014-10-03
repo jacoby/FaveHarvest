@@ -11,7 +11,6 @@ use Getopt::Long ;
 use IO::Interactive qw{ interactive } ;
 use LWP::UserAgent ;
 use Net::Twitter ;
-use WWW::Shorten 'TinyURL' ;
 use YAML qw{ DumpFile LoadFile } ;
 use open ':std', ':encoding(UTF-8)' ;
 binmode STDOUT, ':utf8' ;
@@ -21,7 +20,6 @@ use DB ;
 
 my $start = 1 ;
 
-$DB::Database = 'oz' ;
 my $config = config() ;
 read_favorites( $config ) ;
 exit ;
@@ -100,69 +98,6 @@ SQL
     }
 
 # ========= ========= ========= ========= ========= ========= =========
-sub read_direct_messages {
-    my $config = shift ;
-    my $twit   = Net::Twitter->new(
-        traits          => [ qw/API::RESTv1_1/ ],
-        consumer_key    => $config->{ consumer_key },
-        consumer_secret => $config->{ consumer_secret },
-        ssl             => 1,
-        ) ;
-    if ( $config->{ access_token } && $config->{ access_token_secret } ) {
-        $twit->access_token( $config->{ access_token } ) ;
-        $twit->access_token_secret( $config->{ access_token_secret } ) ;
-        }
-    unless ( $twit->authorized ) {
-        croak( "Not Authorized" ) ;
-        }
-    my $direct_messages = $twit->direct_messages(  ) ;
-    for my $dm ( @$direct_messages ) {
-        my $sender = $dm->{ sender } ;
-        my $screen_name = $sender->{ screen_name } ;
-        my $name = $sender->{ name } ;
-        my $icon = $sender->{ profile_image_url } ;
-        my $date = handle_date( $dm->{ created_at } ) ;
-        my $today = today() ;
-        if ( $today eq $date ) {
-            my $title = qq{From $name (\@$screen_name)} ;
-            my $body = $dm->{ text } ;
-            my $icon_path = '/home/jacoby/Pictures/Icons/twitter_logo_blue.png' ;
-            notify( $title, $body , $icon_path ) ;
-            }
-        # say Dumper $sender ;
-        }
-    }
-
-# Grabs sender icon from Twitter
-sub harvest_icon {
-    my $screen_name = shift ;
-    my $icon = shift ;
-    my $suffix = ( split m{\.} , $icon )[-1] ;
-    my $icon_dir = '/home/jacoby/Pictures/Icons/Twitter/' ;
-    my $twitter_avatar = join '.' , 'twitter' , lc $screen_name , $suffix ;
-    my $twitter_avatar_full = $icon_dir . $twitter_avatar ;
-    if ( ! -f $twitter_avatar_full ) {
-        say 'No avatar' ;
-        my $agent = LWP::UserAgent->new( ) ; #ssl_opts => { verify_hostname => 0 } ) ;
-        my $request = new HTTP::Request( 'GET', $icon ) ;
-        my $response = $agent->request( $request ) ;
-        if ( $response->is_success ) {
-            open my $fh , '>' , $twitter_avatar_full ;
-            print $fh $response->content ;
-            close $fh ;
-            }
-        }
-    return $twitter_avatar_full ;
-    # return '/home/jacoby/Pictures/Icons/icon-dilbert-unix.png' ;
-    }
-
-# Gets today's date in YMD for comparison
-sub today {
-    my $today  = DateTime->now() ;
-    $today->set_time_zone( 'floating' ) ;
-    return $today->ymd() ;
-    }
-
 # Gets DM date, for comparison
 sub handle_date {
     my $twitter_date = shift ;
@@ -191,17 +126,6 @@ sub handle_date {
         time_zone => 'floating'
         ) ;
     return $t_day->ymd() ;
-    }
-
-# Handles the actual notification, using Linux's notify-send
-sub notify {
-    my $title = shift ;
-    my $body  = shift ;
-    my $icon  = shift ;
-    say $icon ;
-    $body = $body || '' ;
-    $icon = $icon || $ENV{HOME} . '/Pictures/Icons/icon_black_muffin.jpg' ;
-    `notify-send "$title" "$body" -i $icon  ` ;
     }
 
 # ========= ========= ========= ========= ========= ========= =========

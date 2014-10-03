@@ -1,0 +1,7 @@
+---
+clients:
+    default:
+        database    : which_database_on_your_system
+        host        : address.of.your.server
+        password    : password
+        user        : username

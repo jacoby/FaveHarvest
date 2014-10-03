@@ -11,7 +11,6 @@ use Getopt::Long ;
 use IO::Interactive qw{ interactive } ;
 use LWP::UserAgent ;
 use Net::Twitter ;
-use WWW::Shorten 'TinyURL' ;
 use YAML qw{ DumpFile LoadFile } ;
 use open ':std', ':encoding(UTF-8)' ;
 binmode STDOUT, ':utf8' ;
@@ -22,10 +21,8 @@ use DB ;
 my $start = 1 ;
 $start = 162 ;
 
-$DB::Database = 'oz' ;
 my $config = config() ;
 read_favorites( $config ) ;
-# update_profile( $config ) ;
 exit ;
 
 # ========= ========= ========= ========= ========= ========= =========
@@ -42,7 +39,20 @@ sub read_favorites {
         $twit->access_token_secret( $config->{ access_token_secret } ) ;
         }
     unless ( $twit->authorized ) {
-        croak( "Not Authorized" ) ;
+        # You have no auth token
+        # go to the auth website.
+        # they'll ask you if you wanna do this, then give you a PIN
+        # input it here and it'll register you.
+        # then save your token vals.
+    
+        say "Authorize this app at ", $twit->get_authorization_url,
+            ' and enter the PIN#' ;
+        my $pin = <STDIN> ;    # wait for input
+        chomp $pin ;
+        my ( $access_token, $access_token_secret, $user_id, $screen_name ) =
+            $twit->request_access_token( verifier => $pin ) ;
+        save_tokens( $user, $access_token, $access_token_secret ) ;
+        exit ;
         }
 
     # my @favs; 
@@ -52,7 +62,6 @@ sub read_favorites {
             page => $page 
             } ) ;
         last unless @$r ;
-        # push @favs , @$r ;
         for my $fav ( @$r ) {
             store_tweet( $fav ) ;
             }
@@ -90,9 +99,6 @@ SQL
     else {
         say { interactive } join "\t" , '' , 'done' ;
         }
-    # else { # like Miley, can't stop won't stop
-    #    exit
-    #    }
     }
 
 # ========= ========= ========= ========= ========= ========= =========
