@@ -57,3 +57,18 @@ list, skipping past already-entered favorite tweets.
 Twitter rate-limits access to it's APIs in an attempt to keep the fail whale at bay, so 
 my program only picks up a new set of up to 20 favorites every five minutes.
 
+Data
+----
+
+Your data is stored in your database. Getting it out like in the form you need it is
+up to you.
+
+You can use the following query, for example, to list your top ten favorited twitter
+users:
+
+    select user_screen_name screen_name 
+        , count(*) count 
+    from twitter_favorites 
+    group by screen_name 
+    order by count 
+    desc limit 10
